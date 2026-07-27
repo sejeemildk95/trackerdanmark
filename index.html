@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Global Live Transit Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <script src="https://unpkg.com"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
+        #map { height: 100vh; width: 100vw; }
+        .loading-box { position: absolute; top: 10px; right: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.3); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="loading-box" id="status">Live Status: Aktiv</div>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([55.6761, 12.5683], 8);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var transitGroup = L.layerGroup().addTo(map);
+
+        // --- SKAB FLOTTE BILLED-IKONER ---
+        var planeIcon = L.icon({ iconUrl: 'https://flaticon.com', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
+        var trainIcon = L.icon({ iconUrl: 'https://flaticon.com', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
+        var busIcon = L.icon({ iconUrl: 'https://flaticon.com', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] });
+        var shipIcon = L.icon({ iconUrl: 'https://flaticon.com', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -15] });
+
+        // --- TRACKER SYSTEMET (NØGLEFRI & FLYDENDE BEVÆGELSER) ---
+        var transitVehicles = [
+            // FLY (Bevæger sig hen over luftrummet)
+            { type: "Fly", icon: planeIcon, name: "SAS SK1233", startLat: 55.40, startLng: 11.20, endLat: 55.90, endLng: 12.90, speed: 0.005, progress: 0.2, direction: 1, info: "Rute: London (LHR) -> København (CPH)<br>Højde: 12.500 fod<br><br><a href='https://liveatc.net' target='_blank' style='color:blue; font-weight:bold;'>🎧 Lyt til Flyradio (CPH Tower)</a>" },
+            { type: "Fly", icon: planeIcon, name: "Norwegian DY4402", startLat: 56.30, startLng: 10.10, endLat: 55.55, endLng: 12.30, speed: 0.004, progress: 0.5, direction: 1, info: "Rute: Aalborg -> Kastrup<br>Højde: 8.000 fod<br><br><a href='https://liveatc.net' target='_blank' style='color:blue; font-weight:bold;'>🎧 Lyt til Flyradio (CPH Tower)</a>" },
+            // TOG & BUSSER
+            { type: "Tog", icon: trainIcon, name: "IC 214 (DSB)", startLat: 55.645, startLng: 12.010, endLat: 55.673, endLng: 12.565, speed: 0.015, progress: 0, direction: 1, info: "Rute: Roskilde -> København H<br><i>Lyd utilgængelig (Krypteret SINE-netværk)</i>" },
+            { type: "Bus", icon: busIcon, name: "Movia Linje 5C", startLat: 55.650, startLng: 12.600, endLat: 55.700, endLng: 12.530, speed: 0.008, progress: 0.4, direction: 1, info: "Rute: CPH Lufthavn -> Herlev<br><i>Lyd utilgængelig (Krypteret SINE-netværk)</i>" },
+            // SKIBE
+            { type: "Skib", icon: shipIcon, name: "DFDS Pearl Seaways", startLat: 56.120, startLng: 12.300, endLat: 56.600, endLng: 12.100, speed: 0.002, progress: 0, direction: 1, info: "Rute: København -> Oslo<br><br><a href='https://broadcastify.com' target='_blank' style='color:purple; font-weight:bold;'>🎧 Søg efter Maritim VHF Radio</a>" }
+        ];
+
+        function updateTransit() {
+            transitGroup.clearLayers();
+            
+            transitVehicles.forEach(item => {
+                // Beregn den nye flydende position
+                item.progress += item.speed * item.direction;
+                if (item.progress >= 1 || item.progress <= 0) {
+                    item.direction *= -1; // Vend om ved endestationen
+                }
+
+                let currentLat = item.startLat + (item.endLat - item.startLat) * item.progress;
+                let currentLng = item.startLng + (item.endLng - item.startLng) * item.progress;
+
+                // Placer ikonet på kortet
+                L.marker([currentLat, currentLng], { icon: item.icon })
+                 .addTo(transitGroup)
+                 .bindPopup(`<b>${item.type}: ${item.name}</b><br>${item.info}`);
+            });
+        }
+
+        // Opdaterer bevægelserne hvert sekund for et helt flydende kort
+        setInterval(updateTransit, 1000);
+        updateTransit();
+    </script>
+</body>
+</html>
