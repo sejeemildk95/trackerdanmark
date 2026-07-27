@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presse-Tracker: Live Alarmer</title>
+    <!-- Hent styling til kortet -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; }
+        #map { height: 70vh; width: 100%; }
+        #alarm-list { height: 30vh; overflow-y: scroll; background: #1a1a1a; color: #fff; padding: 10px; box-sizing: border-box; }
+        .alarm-item { border-bottom: 1px solid #333; padding: 8px 0; font-size: 14px; }
+        .time { color: #ff8c00; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Her vises kortet -->
+    <div id="map"></div>
+
+    <!-- Her vises listen med de seneste alarmer -->
+    <div id="alarm-list">
+        <h3>🚨 Live Alarmer (Beredskab)</h3>
+        <div id="alarms">
+            <p>Henter live-data fra beredskabet...</p>
+        </div>
+    </div>
+
+    <!-- Hent selve kort-teknologien -->
+    <script src="https://unpkg.com"></script>
+    <script>
+        // Centrer kortet over Danmark som standard
+        const map = L.map('map').setView([56.2482, 11.8005], 7);
+
+        // Læg baggrundskort på (Mørkt tema, perfekt til en pressefotograf)
+        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Midlertidig funktion til at simulere en alarm på kortet (Vi kobler live-data på i næste trin)
+        function tilfoejTestAlarm(lat, lon, tekst) {
+            L.marker([lat, lon]).addTo(map)
+                .bindPopup(tekst)
+                .openPopup();
+        }
+        
+        // Eksempel: Københavns Hovedbanegård test-markør
+        tilfoejTestAlarm(55.6728, 12.5646, "<b>Test-alarm:</b> Bygn.brand");
+    </script>
+</body>
+</html>
